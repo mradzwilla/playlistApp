@@ -1,4 +1,6 @@
 import React from 'react';
+import SearchComponent from './components/SearchComponent'
+import ControlsComponent from './components/ControlsComponent'
 
 import logo from './logo.svg';
 import './App.css';
@@ -8,7 +10,7 @@ class App extends React.Component {
     super(props);
     this.state = {
       //token: "",
-      token: "BQCiX-uRMFnrAzDlfSQ_9-38LypHeVTWy1V8-cgStDda5uJ7Pa97CQw-6LyxpIDD-QlMxuU5ymoAfbknElYNB079Ii94cpSdcavpbAvUMb4RlT9e9aPd97aMmOuxs-HSMRf4FnYw8569BJI-cCI5RQN3r1lf_tJGilWDUA",
+      token: "BQCe2UQxwwROXorHsF6aEvZWcIgfhpx8xAM9027AS8WG93PMtWoQ3RMWcmIXD3xOzUuHE52sfIPncelx2kfZX9LMlCPFBKUvpIHwbXLrF48fKlxDBBtCc6ZYZJRcOJq62DZQHEZ1kVtxlj8RjLmxKlW1OgSEOZ3JRW3f6w",
       deviceId: "",
       loggedIn: false,
       error: "",
@@ -90,17 +92,6 @@ class App extends React.Component {
       });
     }
   }
-  onPrevClick() {
-  this.player.previousTrack();
-  }
-
-  onPlayClick() {
-    this.player.togglePlay();
-  }
-
-  onNextClick() {
-    this.player.nextTrack();
-  }
 
   transferPlaybackHere() {
     const { deviceId, token } = this.state;
@@ -134,23 +125,16 @@ class App extends React.Component {
         <div className="App-header">
           <h2>Now Playing</h2>
           <p>A Spotify Web Playback API Demo.</p>
-          <p>Artist: {artistName}</p>
-          <p>Track: {trackName}</p>
-          <p>Album: {albumName}</p>
-          <p>
-            <button onClick={() => this.onPrevClick()}>Previous</button>
-            <button onClick={() => this.onPlayClick()}>{playing ? "Pause" : "Play"}</button>
-            <button onClick={() => this.onNextClick()}>Next</button>
-          </p>
-        </div>
 
         {error && <p>Error: {error}</p>}
 
         {loggedIn ?
         (<div>
+          <SearchComponent/>
           <p>Artist: {artistName}</p>
           <p>Track: {trackName}</p>
           <p>Album: {albumName}</p>
+          <ControlsComponent playing={playing} player={this.player}/>
         </div>)
         :
         (<div>
@@ -168,6 +152,7 @@ class App extends React.Component {
           </p>
         </div>)
         }
+        </div>
       </div>
     );
   }

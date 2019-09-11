@@ -1,6 +1,7 @@
 import React from 'react';
 import SearchComponent from './components/SearchComponent'
 import ControlsComponent from './components/ControlsComponent'
+import axios from 'axios';
 
 import logo from './logo.svg';
 import './App.css';
@@ -10,7 +11,7 @@ class App extends React.Component {
     super(props);
     this.state = {
       //token: "",
-      token: "BQCe2UQxwwROXorHsF6aEvZWcIgfhpx8xAM9027AS8WG93PMtWoQ3RMWcmIXD3xOzUuHE52sfIPncelx2kfZX9LMlCPFBKUvpIHwbXLrF48fKlxDBBtCc6ZYZJRcOJq62DZQHEZ1kVtxlj8RjLmxKlW1OgSEOZ3JRW3f6w",
+      token: "",
       deviceId: "",
       loggedIn: false,
       error: "",
@@ -92,8 +93,15 @@ class App extends React.Component {
       });
     }
   }
+  auth(){
+    axios.get('/spotify/auth')
+    .then(response => {
+      console.log(response.data);
+    })
+  }
 
   transferPlaybackHere() {
+    //Probably should update this with axios later
     const { deviceId, token } = this.state;
     fetch("https://api.spotify.com/v1/me/player", {
       method: "PUT",
@@ -149,6 +157,7 @@ class App extends React.Component {
           </p>
           <p>
             <button onClick={() => this.handleLogin()}>Go</button>
+            <button onClick={() => this.auth()}>Auth</button>
           </p>
         </div>)
         }

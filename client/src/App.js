@@ -1,10 +1,13 @@
 import React from 'react';
 import SearchComponent from './components/SearchComponent'
 import ControlsComponent from './components/ControlsComponent'
+import LoginComponent from './components/LoginComponent'
 import axios from 'axios';
-
-import logo from './logo.svg';
 import './App.css';
+import SpotifyWebApi from 'spotify-web-api-js';
+const spotifyApi = new SpotifyWebApi();
+
+const queryString = require('query-string');
 
 class App extends React.Component {
   constructor(props) {
@@ -23,6 +26,32 @@ class App extends React.Component {
       duration: 0,
     };
     this.playerCheckInterval = null;
+  }
+  componentDidMount() {
+    const parsed = queryString.parse(this.props.location.search);
+    const code = parsed.code
+    axios.get('/spotify/config', {
+    params: {
+        code: code,
+        state: 'needToDoThis'
+      }
+    })
+    .then(function (response) {
+      //Need to build some error handling here
+      const access_token = response.data.access_token;
+      const refresh_token = response.data.refresh_token;
+      console.log(response.data)
+      spotifyApi.setAccessToken(access_token);
+      spotifyApi.getArtistAlbums('43ZHCT0cAZBISjO8DG9PnE', function(err, data) {
+        if (err) console.error(err);
+        else console.log('Artist albums', data);
+      });
+
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+
   }
   handleLogin() {
     if (this.state.token !== "") {
@@ -93,12 +122,6 @@ class App extends React.Component {
       });
     }
   }
-  auth(){
-    axios.get('/spotify/auth')
-    .then(response => {
-      console.log(response.data);
-    })
-  }
 
   transferPlaybackHere() {
     //Probably should update this with axios later
@@ -146,18 +169,10 @@ class App extends React.Component {
         </div>)
         :
         (<div>
-          <p className="App-intro">
-            Enter your Spotify access token. Get it from{" "}
-            <a href="https://beta.developer.spotify.com/documentation/web-playback-sdk/quick-start/#authenticating-with-spotify">
-              here
-            </a>.
-          </p>
           <p>
+            <LoginComponent />
+
             <input type="text" value={token} onChange={e => this.setState({ token: e.target.value })} />
-          </p>
-          <p>
-            <button onClick={() => this.handleLogin()}>Go</button>
-            <button onClick={() => this.auth()}>Auth</button>
           </p>
         </div>)
         }

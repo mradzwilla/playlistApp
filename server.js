@@ -1,45 +1,101 @@
 const express = require('express');
+const querystring = require('querystring');
 const request = require('request');
+//const http = require('http');
+//var cors = require('cors');
 
 // const bodyParser = require('body-parser');
 require('dotenv').config()
-var SpotifyWebApi = require('spotify-web-api-node');
+// import SpotifyWebApi from 'spotify-web-api-js';
+// const spotifyApi = new SpotifyWebApi();
 
 const app = express();
 const port = process.env.PORT || 5000;
 
 var stateKey = 'spotify_auth_state';
+app.get('/spotify/config', function(req, res) {
+  console.log('Request to /spotify/config');
+  var code = req.query.code || null;
+  var state = req.query.state || null;
+  var storedState = req.cookies ? req.cookies[stateKey] : null;
 
-// app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded({ extended: true }));
+  var redirect_uri = process.env.spotify_redirect
+  var client_id = process.env.spotify_app_id
+  var client_secret = process.env.spotify_secret
 
-app.get('/spotify/auth', function(req, res) {
-  var scopes = ['user-read-private', 'user-read-email'],
-    redirectUri = 'http://localhost:3000/api/spotify/callback/',
-    clientId = process.env.spotify_app_id + '',
-    state = stateKey;
-  // Setting credentials can be done in the wrapper's constructor, or using the API object's setters.
-  var spotifyApi = new SpotifyWebApi({
-    redirectUri: 'http://localhost:3000/api/spotify/callback/',
-    clientId: clientId,
-  });
+  if (false){
+  //if (state === null || state !== storedState) {
+  //Need to configure this later for state mismatch with cookies
+  res.send({
+     error: 'state_mismatch'
+   });
+  } else {
+    // res.send({
+    //    error: 'nope'
+    //  });
+    //res.clearCookie(stateKey);
+    var authOptions = {
+      url: 'https://accounts.spotify.com/api/token',
+      form: {
+        code: code,
+        redirect_uri: redirect_uri,
+        grant_type: 'authorization_code'
+      },
+      headers: {
+        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+      },
+      json: true
+    };
 
-  // Create the authorization URL
-  var authorizeURL = spotifyApi.createAuthorizeURL(scopes, stateKey);
-  console.log(authorizeURL)
+    request.post(authOptions, function(error, response, body) {
+      if (!error && response.statusCode === 200) {
 
-  request(authorizeURL, function (error, response, body) {
-      console.log('error:', error); // Print the error if one occurred and handle it
-      console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-      console.log(req)
-      res.send(body)
+        var access_token = body.access_token,
+            refresh_token = body.refresh_token;
+
+        var options = {
+          url: 'https://api.spotify.com/v1/me',
+          headers: { 'Authorization': 'Bearer ' + access_token },
+          json: true
+        };
+
+        // use the access token to access the Spotify Web API
+        // request.get(options, function(error, response, body) {
+        //   console.log(body);
+        // });
+
+        res.send({
+           access_token: access_token,
+           refresh_token: refresh_token
+         });
+        // we can also pass the token to the browser to make requests from there
+        // res.redirect('http://localhost:3000/#' +
+        //   querystring.stringify({
+        //     access_token: access_token,
+        //     refresh_token: refresh_token
+        // }));
+      } else {
+        res.send({
+           error: error,
+           response: response,
+           body: body
+         });
+        // res.redirect('/#' +
+        //   querystring.stringify({
+        //     error: 'invalid_token'
+        //   }));
+      }
     });
+  }
 
+  // res.send({
+  //    express: 'Fuckkaaa'
+  //  });
 });
 
-app.get('api/spotify/callback', function(req, res) {
+app.get('/api/spotify/callback', function(req, res) {
   console.log('Callback');
-
+  console.log(req)
 });
 
 //Examples from setup tutorial

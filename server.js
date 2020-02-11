@@ -6,8 +6,6 @@ const request = require('request');
 
 // const bodyParser = require('body-parser');
 require('dotenv').config()
-// import SpotifyWebApi from 'spotify-web-api-js';
-// const spotifyApi = new SpotifyWebApi();
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -16,6 +14,8 @@ var stateKey = 'spotify_auth_state';
 app.get('/spotify/config', function(req, res) {
   console.log('Request to /spotify/config');
   var code = req.query.code || null;
+  console.log('req:', req.query)
+  console.log('code: ', code)
   var state = req.query.state || null;
   var storedState = req.cookies ? req.cookies[stateKey] : null;
 
@@ -26,14 +26,15 @@ app.get('/spotify/config', function(req, res) {
   if (false){
   //if (state === null || state !== storedState) {
   //Need to configure this later for state mismatch with cookies
-  res.send({
-     error: 'state_mismatch'
-   });
+  // res.send({
+  //    error: 'state_mismatch'
+  //  });
   } else {
     // res.send({
     //    error: 'nope'
     //  });
     //res.clearCookie(stateKey);
+    //console.log('Basic ' + (Buffer.from(client_id + ':' + client_secret).toString('base64')))
     var authOptions = {
       url: 'https://accounts.spotify.com/api/token',
       form: {
@@ -42,14 +43,14 @@ app.get('/spotify/config', function(req, res) {
         grant_type: 'authorization_code'
       },
       headers: {
-        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+        'Authorization': 'Basic ' + (Buffer.from(client_id + ':' + client_secret).toString('base64'))
       },
       json: true
     };
 
     request.post(authOptions, function(error, response, body) {
       if (!error && response.statusCode === 200) {
-
+        console.log(response)
         var access_token = body.access_token,
             refresh_token = body.refresh_token;
 
@@ -64,7 +65,7 @@ app.get('/spotify/config', function(req, res) {
         //   console.log(body);
         // });
 
-        res.send({
+        res.json({
            access_token: access_token,
            refresh_token: refresh_token
          });
@@ -75,6 +76,7 @@ app.get('/spotify/config', function(req, res) {
         //     refresh_token: refresh_token
         // }));
       } else {
+        console.log(error, response, body)
         res.send({
            error: error,
            response: response,

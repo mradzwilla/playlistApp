@@ -7,14 +7,13 @@ import './App.css';
 import SpotifyWebApi from 'spotify-web-api-js';
 const spotifyApi = new SpotifyWebApi();
 
-const queryString = require('query-string');
+const queryString = require('querystring');
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      //token: "",
-      token: "",
+      // token: "",
       deviceId: "",
       loggedIn: false,
       error: "",
@@ -26,77 +25,114 @@ class App extends React.Component {
       duration: 0,
     };
     this.playerCheckInterval = null;
+    //this.checkForPlayer = this.checkForPlayer.bind(this)
   }
   componentDidMount() {
-    const parsed = queryString.parse(this.props.location.search);
+    const parsed = queryString.parse(this.props.location.search.replace(/^\?/, ''));
     const code = parsed.code
-    axios.get('/spotify/config', {
-    params: {
-        code: code,
-        state: 'needToDoThis'
-      }
-    })
-    .then(function (response) {
-      //Need to build some error handling here
-      const access_token = response.data.access_token;
-      const refresh_token = response.data.refresh_token;
-      console.log(response.data)
-      spotifyApi.setAccessToken(access_token);
-      spotifyApi.getArtistAlbums('43ZHCT0cAZBISjO8DG9PnE', function(err, data) {
-        if (err) console.error(err);
-        else console.log('Artist albums', data);
+    console.log(code)
+    if (false){
+      spotifyApi.setAccessToken(code);
+      this.loadPlayer(code);
+    } else {
+      const self = this
+      axios.get('/spotify/config', {
+      params: {
+          code: code,
+          state: 'needToDoThis' //I don't remember what I was referring to here but it has something to do with session management
+        }
+      })
+      .then((response) => {
+        //Need to build some error handling here
+        const access_token = response.data.access_token;
+        const refresh_token = response.data.refresh_token;
+        console.log(response)
+        this.loadPlayer(access_token);
+        //this.checkForPlayer(access_token);
+        spotifyApi.setAccessToken(access_token);
+        // spotifyApi.getArtistAlbums('43ZHCT0cAZBISjO8DG9PnE', function(err, data) {
+        //   if (err) console.error(err);
+        //   else console.log('Artist albums', data);
+        // });
+      })
+      .catch(function (error) {
+        console.log('Error: ' + error);
       });
-
-    })
-    .catch(function (error) {
-      console.log(error);
-    });
-
+    }
   }
   handleLogin() {
-    if (this.state.token !== "") {
-      this.setState({ loggedIn: true });
-      // check every second for the player.
-      this.playerCheckInterval = setInterval(() => this.checkForPlayer(), 1000);
-    }
+    // if (this.state.token !== "") {
+    //   this.setState({ loggedIn: true });
+    //   // check every second for the player.
+    //   // this.playerCheckInterval = setInterval(() => this.checkForPlayer(), 1000);
+    // }
   }
-  checkForPlayer() {
-    const { token } = this.state;
+  async waitForSpotifyWebPlaybackSDKToLoad () {
+    return new Promise(resolve => {
+      if (window.Spotify) {
+        resolve(window.Spotify);
+      } else {
+        window.onSpotifyWebPlaybackSDKReady = () => {
+          resolve(window.Spotify);
+        };
+      }
+    });
+  };
 
-    if (window.Spotify !== null) {
-      // cancel the interval
-      clearInterval(this.playerCheckInterval);
-
-      this.player = new window.Spotify.Player({
-        name: "Mike's Spotify Player",
+  loadPlayer(token){
+    (async () => {
+      const { Player } = await this.waitForSpotifyWebPlaybackSDKToLoad();
+      const sdk = new Player({
+        name: "Mike's Test Spotify Player",
         getOAuthToken: cb => { cb(token); },
       });
-      this.createEventHandlers();
+      this.createEventHandlers(sdk, token);
+      let connected = await sdk.connect();
+      if (connected) {
+        console.log(connected)
+        let state = await sdk.getCurrentState();
 
-      // finally, connect!
-      this.player.connect();
-    }
+      }
+    })();
   }
-  createEventHandlers() {
-    this.player.on('initialization_error', e => { console.error(e); });
-    this.player.on('authentication_error', e => {
+  // checkForPlayer(token) {
+  //   //const { token } = this.state;
+  //   const tokenTest = token;
+  //   if (typeof(window.Spotify) !== 'undefined') {
+  //     // cancel the interval
+  //     clearInterval(this.playerCheckInterval);
+  //     console.log(window.Spotify)
+  //     this.player = new window.Spotify.Player({
+  //       name: "Mike's Spotify Player",
+  //       getOAuthToken: cb => { cb(token); },
+  //     });
+  //     this.createEventHandlers();
+  //
+  //     // finally, connect!
+  //     this.player.connect();
+  //   }
+  // }
+  createEventHandlers(player, token) {
+    player.on('initialization_error', e => { console.error(e); });
+    player.on('authentication_error', e => {
       console.error(e);
       this.setState({ loggedIn: false });
     });
-    this.player.on('account_error', e => { console.error(e); });
-    this.player.on('playback_error', e => { console.error(e); });
+    player.on('account_error', e => { console.error(e); });
+    player.on('playback_error', e => { console.error(e); });
 
     // Playback status updates
-    this.player.on('player_state_changed', state => this.onStateChanged(state));
+    player.on('player_state_changed', state => this.onStateChanged(state));
 
     // Ready
-    this.player.on('ready', async data => {
+    player.on('ready', async data => {
       let { device_id } = data;
+      console.log('ready', device_id)
       console.log("Let the music play on!");
       await this.setState({ deviceId: device_id });
-      this.transferPlaybackHere();
+      this.transferPlaybackHere(device_id, token);
+      // this.player.connect();
     });
-
   }
   onStateChanged(state) {
     // if we're no longer listening to music, we'll get a null state.
@@ -123,9 +159,9 @@ class App extends React.Component {
     }
   }
 
-  transferPlaybackHere() {
+  transferPlaybackHere(deviceId, token) {
     //Probably should update this with axios later
-    const { deviceId, token } = this.state;
+    //const { deviceId, token } = this.state;
     fetch("https://api.spotify.com/v1/me/player", {
       method: "PUT",
       headers: {
@@ -137,7 +173,7 @@ class App extends React.Component {
         "play": true,
       }),
     });
-    }
+  }
   render() {
     const {
       token,
@@ -171,8 +207,7 @@ class App extends React.Component {
         (<div>
           <p>
             <LoginComponent />
-
-            <input type="text" value={token} onChange={e => this.setState({ token: e.target.value })} />
+            {token}
           </p>
         </div>)
         }

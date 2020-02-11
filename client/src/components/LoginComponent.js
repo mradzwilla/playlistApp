@@ -21,7 +21,9 @@ class Login extends React.Component {
   // your application requests authorization
   const appId = '26e6bd236e3c4bb38d86da742958c371';
   const redirectUri = 'http://localhost:3000/api/spotify/callback/'
-  const scope = 'user-read-private user-read-email user-read-playback-state';
+  const scope = 'streaming user-read-private user-read-email user-read-playback-state';
+  //var scopes = ["streaming", "user-read-email", "user-read-private", "user-read-playback-state", "user-modify-playback-state", "user-read-currently-playing"];
+
   const url = 'https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',

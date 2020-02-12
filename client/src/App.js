@@ -25,12 +25,10 @@ class App extends React.Component {
       duration: 0,
     };
     this.playerCheckInterval = null;
-    //this.checkForPlayer = this.checkForPlayer.bind(this)
   }
   componentDidMount() {
     const parsed = queryString.parse(this.props.location.search.replace(/^\?/, ''));
     const code = parsed.code
-    console.log(code)
     if (false){
       spotifyApi.setAccessToken(code);
       this.loadPlayer(code);
@@ -39,21 +37,16 @@ class App extends React.Component {
       axios.get('/spotify/config', {
       params: {
           code: code,
-          state: 'needToDoThis' //I don't remember what I was referring to here but it has something to do with session management
+          state: 'needToDoThis' //This is explained further on the server side
         }
       })
       .then((response) => {
         //Need to build some error handling here
         const access_token = response.data.access_token;
         const refresh_token = response.data.refresh_token;
-        console.log(response)
+        this.handleLogin();
         this.loadPlayer(access_token);
-        //this.checkForPlayer(access_token);
         spotifyApi.setAccessToken(access_token);
-        // spotifyApi.getArtistAlbums('43ZHCT0cAZBISjO8DG9PnE', function(err, data) {
-        //   if (err) console.error(err);
-        //   else console.log('Artist albums', data);
-        // });
       })
       .catch(function (error) {
         console.log('Error: ' + error);
@@ -62,7 +55,7 @@ class App extends React.Component {
   }
   handleLogin() {
     // if (this.state.token !== "") {
-    //   this.setState({ loggedIn: true });
+      this.setState({ loggedIn: true });
     //   // check every second for the player.
     //   // this.playerCheckInterval = setInterval(() => this.checkForPlayer(), 1000);
     // }
@@ -161,7 +154,6 @@ class App extends React.Component {
 
   transferPlaybackHere(deviceId, token) {
     //Probably should update this with axios later
-    //const { deviceId, token } = this.state;
     fetch("https://api.spotify.com/v1/me/player", {
       method: "PUT",
       headers: {

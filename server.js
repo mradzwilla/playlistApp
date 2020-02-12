@@ -14,8 +14,9 @@ var stateKey = 'spotify_auth_state';
 app.get('/spotify/config', function(req, res) {
   console.log('Request to /spotify/config');
   var code = req.query.code || null;
-  console.log('req:', req.query)
-  console.log('code: ', code)
+  console.log('---------------------------------------------------')
+  //console.log('req:', req.query)
+  //console.log('code: ', code)
   var state = req.query.state || null;
   var storedState = req.cookies ? req.cookies[stateKey] : null;
 
@@ -50,7 +51,7 @@ app.get('/spotify/config', function(req, res) {
 
     request.post(authOptions, function(error, response, body) {
       if (!error && response.statusCode === 200) {
-        console.log(response)
+        //console.log(response)
         var access_token = body.access_token,
             refresh_token = body.refresh_token;
 
@@ -76,7 +77,7 @@ app.get('/spotify/config', function(req, res) {
         //     refresh_token: refresh_token
         // }));
       } else {
-        console.log(error, response, body)
+        //console.log(error, response, body)
         res.send({
            error: error,
            response: response,
@@ -95,10 +96,10 @@ app.get('/spotify/config', function(req, res) {
   //  });
 });
 
-app.get('/api/spotify/callback', function(req, res) {
-  console.log('Callback');
-  console.log(req)
-});
+// app.get('/api/spotify/callback', function(req, res) {
+//   console.log('Callback');
+//   //console.log(req)
+// });
 
 //Examples from setup tutorial
 

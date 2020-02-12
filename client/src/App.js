@@ -1,9 +1,16 @@
+//This really should be moved into the compnents folder at some point
+
 import React from 'react';
 import SearchComponent from './components/SearchComponent'
 import ControlsComponent from './components/ControlsComponent'
 import LoginComponent from './components/LoginComponent'
 import axios from 'axios';
 import './App.css';
+
+import actions from './redux/actions';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+
 import SpotifyWebApi from 'spotify-web-api-js';
 const spotifyApi = new SpotifyWebApi();
 
@@ -29,7 +36,9 @@ class App extends React.Component {
   componentDidMount() {
     const parsed = queryString.parse(this.props.location.search.replace(/^\?/, ''));
     const code = parsed.code
-    if (false){
+    //Our condition here should check if there is a token in the store and if it's valid
+    //If it isn't, call the backend server to get a new one. Else continue
+    if (false){ //this will be if a token exists
       spotifyApi.setAccessToken(code);
       this.loadPlayer(code);
     } else {
@@ -44,6 +53,10 @@ class App extends React.Component {
         //Need to build some error handling here
         const access_token = response.data.access_token;
         const refresh_token = response.data.refresh_token;
+        console.log('New token is:'+access_token)
+        //Here is where we need to dispatch the action to Redux to set the token in the store
+        this.props.actions.storeAccessToken(access_token)
+        //After doing this, all additional logic should be moved somewhere else
         this.handleLogin();
         this.loadPlayer(access_token);
         spotifyApi.setAccessToken(access_token);
@@ -82,29 +95,11 @@ class App extends React.Component {
       this.createEventHandlers(sdk, token);
       let connected = await sdk.connect();
       if (connected) {
-        console.log(connected)
         let state = await sdk.getCurrentState();
-
       }
     })();
   }
-  // checkForPlayer(token) {
-  //   //const { token } = this.state;
-  //   const tokenTest = token;
-  //   if (typeof(window.Spotify) !== 'undefined') {
-  //     // cancel the interval
-  //     clearInterval(this.playerCheckInterval);
-  //     console.log(window.Spotify)
-  //     this.player = new window.Spotify.Player({
-  //       name: "Mike's Spotify Player",
-  //       getOAuthToken: cb => { cb(token); },
-  //     });
-  //     this.createEventHandlers();
-  //
-  //     // finally, connect!
-  //     this.player.connect();
-  //   }
-  // }
+
   createEventHandlers(player, token) {
     player.on('initialization_error', e => { console.error(e); });
     player.on('authentication_error', e => {
@@ -203,10 +198,21 @@ class App extends React.Component {
           </p>
         </div>)
         }
+        <div>Access code: {this.props.accessToken}</div>
         </div>
       </div>
     );
   }
 }
 
-export default App;
+function mapStateToProps(state){
+  return state
+}
+
+function mapDispatchToProps(dispatch){
+  return {
+    actions: bindActionCreators(actions, dispatch)
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(App)

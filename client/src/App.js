@@ -34,41 +34,13 @@ class App extends React.Component {
     this.playerCheckInterval = null;
   }
   componentDidMount() {
-    const parsed = queryString.parse(this.props.location.search.replace(/^\?/, ''));
-    const code = parsed.code
-    //Our condition here should check if there is a token in the store and if it's valid
-    //If it isn't, call the backend server to get a new one. Else continue
-    if (false){ //this will be if a token exists
-      spotifyApi.setAccessToken(code);
-      this.loadPlayer(code);
-    } else {
-      const self = this
-      axios.get('/spotify/config', {
-      params: {
-          code: code,
-          state: 'needToDoThis' //This is explained further on the server side
-        }
-      })
-      .then((response) => {
-        //Need to build some error handling here
-        const access_token = response.data.access_token;
-        const refresh_token = response.data.refresh_token;
-        console.log('New token is:'+access_token)
-        //Here is where we need to dispatch the action to Redux to set the token in the store
-        this.props.actions.storeAccessToken(access_token)
-        //After doing this, all additional logic should be moved somewhere else
-        this.handleLogin();
-        this.loadPlayer(access_token);
-        spotifyApi.setAccessToken(access_token);
-      })
-      .catch(function (error) {
-        console.log('Error: ' + error);
-      });
-    }
+    console.log(this.props)
+    this.loadPlayer(this.props.accessToken);
+    spotifyApi.setAccessToken(this.props.accessToken);
   }
   handleLogin() {
     // if (this.state.token !== "") {
-      this.setState({ loggedIn: true });
+    //  this.setState({ loggedIn: true });
     //   // check every second for the player.
     //   // this.playerCheckInterval = setInterval(() => this.checkForPlayer(), 1000);
     // }

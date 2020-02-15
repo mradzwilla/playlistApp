@@ -8,6 +8,7 @@ import store from "./redux/store";
 
 import App from './App';
 import Login from './components/LoginComponent';
+import Auth from './components/AuthComponent';
 import NotFound from './components/RouteNotFoundComponent';
 import * as serviceWorker from './serviceWorker';
 
@@ -15,8 +16,9 @@ const routing = (
   <Provider store={store}>
     <Router>
       <div>
-        <Route path="/" component={App} />
-        <Route path="/login" component={Login} />
+        <Route exact path="/" component={App} />
+        <Route exact path="/login" component={Login} />
+        <Route path="/api/spotify/callback/" component={Auth} />
       </div>
     </Router>
   </Provider>

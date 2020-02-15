@@ -14,9 +14,6 @@ var stateKey = 'spotify_auth_state';
 app.get('/spotify/config', function(req, res) {
   console.log('Request to /spotify/config');
   var code = req.query.code || null;
-  console.log('---------------------------------------------------')
-  //console.log('req:', req.query)
-  //console.log('code: ', code)
   var state = req.query.state || null;
   var storedState = req.cookies ? req.cookies[stateKey] : null;
 

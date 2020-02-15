@@ -17,7 +17,7 @@ const routing = (
     <Router>
       <div>
         <Route exact path="/" component={App} />
-        <Route exact path="/login" component={Login} />
+        <Route path="/login" component={Login} />
         <Route path="/api/spotify/callback/" component={Auth} />
       </div>
     </Router>

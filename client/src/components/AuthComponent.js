@@ -11,11 +11,16 @@ const queryString = require('querystring');
 
 
 class AuthComponent extends Component {
+  constructor(props){
+    super(props);
+    this.state = { complete: false };
+  }
 
   componentDidMount(){
     const parsed = queryString.parse(this.props.location.search.replace(/^\?/, ''));
     const code = parsed.code
     const self = this
+
     axios.get('/spotify/config', {
     params: {
         code: code,
@@ -27,6 +32,10 @@ class AuthComponent extends Component {
       const refresh_token = response.data.refresh_token;
       //Here is where we need to dispatch the action to Redux to set the token in the store
       this.props.actions.storeAccessToken(access_token)
+      this.setState({
+        complete: true,
+        token: access_token
+      })
       //We need to save the refresh token and create users in a DB here eventuallt
     })
     .catch(function (error) {
@@ -35,9 +44,14 @@ class AuthComponent extends Component {
   }
 
   render() {
-    return(
-      <Redirect to="/" />
-    )
+    if (!this.state.complete) {
+      return <div />
+    }
+
+    return <Redirect to={{
+            pathname: '/',
+            state: { token: this.state.token }
+        }} />
   }
 }
 

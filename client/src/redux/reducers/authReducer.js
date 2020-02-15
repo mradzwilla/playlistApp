@@ -6,7 +6,7 @@ let authReducer = function(code = "", action){
 		case 'SET_ACCESS_TOKEN':
 			return action.payload['code']
 		default:
-			return '';
+			return "";
 	}
 }
 
